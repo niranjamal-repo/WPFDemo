@@ -1,0 +1,114 @@
+﻿<Window x:Class="WpfClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfClient"
+        xmlns:utils="clr-namespace:WpfClient.Utilities"
+        mc:Ignorable="d"
+        Title="WPF Items" Height="620" Width="980">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+        <utils:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+    </Window.Resources>
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="Search:" VerticalAlignment="Center"/>
+            <TextBox Width="200" Margin="6,0,12,0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+            <Button Content="Search" Width="90" Margin="0,0,8,0" Command="{Binding SearchCommand}"/>
+            <TextBlock Text="Sort:" VerticalAlignment="Center"/>
+            <ComboBox Width="140" Margin="6,0,8,0" SelectedValuePath="Content" SelectedValue="{Binding SortBy}">
+                <ComboBoxItem Content="createdAt"/>
+                <ComboBoxItem Content="name"/>
+                <ComboBoxItem Content="price"/>
+            </ComboBox>
+            <ComboBox Width="100" Margin="0,0,8,0" SelectedValuePath="Content" SelectedValue="{Binding SortDirection}">
+                <ComboBoxItem Content="desc"/>
+                <ComboBoxItem Content="asc"/>
+            </ComboBox>
+            <Button Content="Refresh" Width="90" Command="{Binding LoadCommand}"/>
+            <ProgressBar Width="120" Height="16" Margin="12,0,0,0"
+                         IsIndeterminate="True"
+                         Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}"/>
+        </StackPanel>
+
+        <DataGrid Grid.Row="1"
+                  x:Name="ItemsGrid"
+                  ItemsSource="{Binding Items}"
+                  SelectedItem="{Binding SelectedItem}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserSortColumns="True"
+                  Sorting="ItemsGrid_Sorting"
+                  Margin="0,0,0,8">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="60" CanUserSort="False"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="180" SortMemberPath="Name"/>
+                <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*"/>
+                <DataGridTextColumn Header="Price" Binding="{Binding Price, StringFormat=C}" Width="120" SortMemberPath="Price"/>
+                <DataGridTextColumn Header="Created" Binding="{Binding CreatedAt}" Width="180" SortMemberPath="CreatedAt"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8" VerticalAlignment="Center">
+            <Button Content="Prev" Width="70" Margin="0,0,8,0" Command="{Binding PreviousPageCommand}"/>
+            <Button Content="Next" Width="70" Margin="0,0,12,0" Command="{Binding NextPageCommand}"/>
+            <TextBlock Text="Page" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding Page}" Margin="6,0,6,0" VerticalAlignment="Center"/>
+            <TextBlock Text="of" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding TotalPages}" Margin="6,0,12,0" VerticalAlignment="Center"/>
+            <TextBlock Text="Total:" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding TotalCount}" Margin="6,0,12,0" VerticalAlignment="Center"/>
+            <TextBlock Text="Page size:" VerticalAlignment="Center"/>
+            <ComboBox Width="80" Margin="6,0,0,0" SelectedValuePath="Content" SelectedValue="{Binding PageSize}">
+                <ComboBoxItem Content="10"/>
+                <ComboBoxItem Content="20"/>
+                <ComboBoxItem Content="50"/>
+                <ComboBoxItem Content="100"/>
+            </ComboBox>
+        </StackPanel>
+
+        <Grid Grid.Row="3" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Name"/>
+                <TextBox Margin="0,4,8,0"
+                         Text="{Binding EditName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <TextBlock Text="Description"/>
+                <TextBox Margin="0,4,8,0" Text="{Binding EditDescription, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="Price"/>
+                <TextBox Margin="0,4,8,0"
+                         PreviewTextInput="PriceTextBox_PreviewTextInput"
+                         DataObject.Pasting="PriceTextBox_Pasting"
+                         Text="{Binding EditPrice, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <Button Content="New" Width="70" Margin="0,0,8,0" Command="{Binding NewCommand}"/>
+                <Button Content="Create" Width="80" Margin="0,0,8,0" Command="{Binding CreateCommand}"/>
+                <Button Content="Update" Width="80" Margin="0,0,8,0" Command="{Binding UpdateCommand}"/>
+                <Button Content="Delete" Width="80" Command="{Binding DeleteCommand}"/>
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="4" Background="#EEE" Padding="8">
+            <TextBlock Text="{Binding StatusMessage}"/>
+        </Border>
+    </Grid>
+</Window>

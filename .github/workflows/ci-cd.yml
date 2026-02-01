@@ -1,0 +1,100 @@
+name: ci-cd
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: "9.0.x"
+  WEBAPI_PROJECT: "WebApi/WebApi.csproj"
+  TEST_PROJECT: "WebApi.Tests/WebApi.Tests.csproj"
+
+jobs:
+  build_test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build Web API
+        run: dotnet build ${{ env.WEBAPI_PROJECT }} --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test ${{ env.TEST_PROJECT }} --configuration Release --no-build
+
+      - name: Publish Web API
+        run: dotnet publish ${{ env.WEBAPI_PROJECT }} --configuration Release --output ${{ github.workspace }}\artifacts\webapi
+
+      - name: Upload Web API artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapi
+          path: ${{ github.workspace }}\artifacts\webapi
+
+  deploy_dev:
+    needs: build_test
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    environment: dev
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: webapi
+          path: webapi
+
+      - name: Deploy to Azure (Dev)
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_DEV }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
+          package: webapi
+
+  deploy_test:
+    needs: build_test
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    environment: test
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: webapi
+          path: webapi
+
+      - name: Deploy to Azure (Test)
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_TEST }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_TEST }}
+          package: webapi
+
+  deploy_prod:
+    needs: build_test
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    environment: prod
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: webapi
+          path: webapi
+
+      - name: Deploy to Azure (Prod)
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_PROD }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
+          package: webapi
