@@ -1,16 +1,15 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Shared;
 using WebApi.Models;
 
 namespace WebApi.Tests;
 
-public class ItemsApiTests : IClassFixture<WebApplicationFactory<Program>>
+public class ItemsApiTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
 
-    public ItemsApiTests(WebApplicationFactory<Program> factory)
+    public ItemsApiTests(TestWebApplicationFactory factory)
     {
         _client = factory.CreateClient();
     }
