@@ -25,9 +25,9 @@ if (IsConfiguredValue(appConfigConnection))
 }
 
 var keyVaultUri = builder.Configuration["Azure:KeyVaultUri"];
-if (IsConfiguredValue(keyVaultUri))
+if (IsConfiguredValue(keyVaultUri) && Uri.TryCreate(keyVaultUri, UriKind.Absolute, out var keyVaultUriValue))
 {
-    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
+    builder.Configuration.AddAzureKeyVault(keyVaultUriValue, new DefaultAzureCredential());
 }
 
 builder.Services.AddControllers();
@@ -160,10 +160,6 @@ app.MapControllers().RequireRateLimiting("fixed");
 
 app.Run();
 
-public partial class Program
-{
-}
-
 static bool IsConfiguredValue(string? value)
 {
     if (string.IsNullOrWhiteSpace(value))
@@ -173,4 +169,8 @@ static bool IsConfiguredValue(string? value)
 
     // Treat placeholder values (e.g., "<set-in-app-service>") as not configured.
     return !value.Contains('<') && !value.Contains('>');
+}
+
+public partial class Program
+{
 }
