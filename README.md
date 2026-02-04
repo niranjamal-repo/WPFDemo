@@ -112,6 +112,7 @@ dotnet test
 
 - Unit tests: `WebApi.Tests/RepositoryTests.cs`
 - Integration tests: `WebApi.Tests/ItemsApiTests.cs`
+- Integration tests use `appsettings.Test.json` with a non-placeholder `Jwt:Key`.
 
 ## Configuration
 ### Base settings
