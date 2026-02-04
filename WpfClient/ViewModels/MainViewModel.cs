@@ -18,6 +18,10 @@ public class MainViewModel : INotifyPropertyChanged, IDataErrorInfo
     private string _editDescription = string.Empty;
     private decimal _editPrice;
     private string _statusMessage = "Ready";
+    private string _loginUserName = string.Empty;
+    private string _loginPassword = string.Empty;
+    private bool _isAuthenticated;
+    private string _authStatus = "Not signed in";
     private int _page = 1;
     private int _pageSize = 20;
     private int _totalCount;
@@ -30,13 +34,18 @@ public class MainViewModel : INotifyPropertyChanged, IDataErrorInfo
         _apiClient = new ItemApiClient("https://localhost:7042/");
 
         LoadCommand = new AsyncRelayCommand(LoadAsync);
-        CreateCommand = new AsyncRelayCommand(CreateAsync, () => !string.IsNullOrWhiteSpace(EditName));
-        UpdateCommand = new AsyncRelayCommand(UpdateAsync, () => SelectedItem is not null);
-        DeleteCommand = new AsyncRelayCommand(DeleteAsync, () => SelectedItem is not null);
+        CreateCommand = new AsyncRelayCommand(CreateAsync, () => !string.IsNullOrWhiteSpace(EditName) && IsAuthenticated);
+        UpdateCommand = new AsyncRelayCommand(UpdateAsync, () => SelectedItem is not null && IsAuthenticated);
+        DeleteCommand = new AsyncRelayCommand(DeleteAsync, () => SelectedItem is not null && IsAuthenticated);
         NewCommand = new RelayCommand(ClearEditor);
         SearchCommand = new AsyncRelayCommand(SearchAsync);
         NextPageCommand = new AsyncRelayCommand(NextPageAsync, () => Page < TotalPages);
         PreviousPageCommand = new AsyncRelayCommand(PreviousPageAsync, () => Page > 1);
+        LoginCommand = new AsyncRelayCommand(LoginAsync, () =>
+            !IsAuthenticated &&
+            !string.IsNullOrWhiteSpace(LoginUserName) &&
+            !string.IsNullOrWhiteSpace(LoginPassword));
+        LogoutCommand = new RelayCommand(Logout, () => IsAuthenticated);
 
         _ = LoadAsync();
     }
@@ -120,6 +129,52 @@ public class MainViewModel : INotifyPropertyChanged, IDataErrorInfo
         set => SetField(ref _editPrice, value);
     }
 
+    public string LoginUserName
+    {
+        get => _loginUserName;
+        set
+        {
+            if (SetField(ref _loginUserName, value))
+            {
+                RaiseAuthCommandCanExecuteChanged();
+            }
+        }
+    }
+
+    public string LoginPassword
+    {
+        get => _loginPassword;
+        set
+        {
+            if (SetField(ref _loginPassword, value))
+            {
+                RaiseAuthCommandCanExecuteChanged();
+            }
+        }
+    }
+
+    public bool IsAuthenticated
+    {
+        get => _isAuthenticated;
+        set
+        {
+            if (SetField(ref _isAuthenticated, value))
+            {
+                AuthStatus = value
+                    ? $"Signed in as {LoginUserName}"
+                    : "Not signed in";
+                RaiseCommandCanExecuteChanged();
+                RaiseAuthCommandCanExecuteChanged();
+            }
+        }
+    }
+
+    public string AuthStatus
+    {
+        get => _authStatus;
+        set => SetField(ref _authStatus, value);
+    }
+
     public int Page
     {
         get => _page;
@@ -181,6 +236,8 @@ public class MainViewModel : INotifyPropertyChanged, IDataErrorInfo
     public AsyncRelayCommand SearchCommand { get; }
     public AsyncRelayCommand NextPageCommand { get; }
     public AsyncRelayCommand PreviousPageCommand { get; }
+    public AsyncRelayCommand LoginCommand { get; }
+    public RelayCommand LogoutCommand { get; }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event Action<string>? ErrorOccurred;
@@ -196,6 +253,8 @@ public class MainViewModel : INotifyPropertyChanged, IDataErrorInfo
                 nameof(EditName) when string.IsNullOrWhiteSpace(EditName) => "Name is required.",
                 nameof(EditPrice) when EditPrice < 0 => "Price must be 0 or greater.",
                 nameof(PageSize) when PageSize < 1 || PageSize > 100 => "Page size must be between 1 and 100.",
+                nameof(LoginUserName) when string.IsNullOrWhiteSpace(LoginUserName) => "Username is required.",
+                nameof(LoginPassword) when string.IsNullOrWhiteSpace(LoginPassword) => "Password is required.",
                 _ => string.Empty
             };
         }
@@ -362,6 +421,40 @@ public class MainViewModel : INotifyPropertyChanged, IDataErrorInfo
         }
     }
 
+    private async Task LoginAsync()
+    {
+        try
+        {
+            IsLoading = true;
+            StatusMessage = "Signing in...";
+            var token = await _apiClient.RequestTokenAsync(new WpfClient.Models.TokenRequest
+            {
+                UserName = LoginUserName.Trim(),
+                Password = LoginPassword
+            });
+
+            _apiClient.SetAccessToken(token.AccessToken);
+            IsAuthenticated = true;
+            StatusMessage = "Signed in.";
+        }
+        catch (Exception ex)
+        {
+            IsAuthenticated = false;
+            NotifyError($"Sign-in failed: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void Logout()
+    {
+        _apiClient.SetAccessToken(null);
+        IsAuthenticated = false;
+        StatusMessage = "Signed out.";
+    }
+
     private void ClearEditor()
     {
         SelectedItem = null;
@@ -381,6 +474,12 @@ public class MainViewModel : INotifyPropertyChanged, IDataErrorInfo
         CreateCommand.RaiseCanExecuteChanged();
         UpdateCommand.RaiseCanExecuteChanged();
         DeleteCommand.RaiseCanExecuteChanged();
+    }
+
+    private void RaiseAuthCommandCanExecuteChanged()
+    {
+        LoginCommand.RaiseCanExecuteChanged();
+        LogoutCommand.RaiseCanExecuteChanged();
     }
 
     private void RaisePagingCanExecuteChanged()

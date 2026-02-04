@@ -31,7 +31,7 @@ public class ItemsApiTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task Create_Item_Then_Get_By_Id()
     {
-        var token = await GetTokenAsync("admin-user", "Admin");
+        var token = await GetTokenAsync("admin", "Admin@123");
         _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
         var createResponse = await _client.PostAsJsonAsync("/api/v1/items", new Item
@@ -53,12 +53,12 @@ public class ItemsApiTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal(created.Id, fetched!.Id);
     }
 
-    private async Task<string> GetTokenAsync(string userName, string role)
+    private async Task<string> GetTokenAsync(string userName, string password)
     {
         var response = await _client.PostAsJsonAsync("/api/v1/auth/token", new
         {
             userName,
-            role
+            password
         });
 
         response.EnsureSuccessStatusCode();

@@ -96,4 +96,17 @@ public partial class MainWindow : Window
         var sortDir = nextDirection == ListSortDirection.Ascending ? "asc" : "desc";
         await viewModel.ApplySortAsync(sortBy, sortDir);
     }
+
+    private void LoginPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        if (sender is PasswordBox passwordBox)
+        {
+            viewModel.LoginPassword = passwordBox.Password;
+        }
+    }
 }

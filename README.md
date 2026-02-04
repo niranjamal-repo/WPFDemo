@@ -74,7 +74,7 @@ Roles:
 POST /api/v1/auth/token
 {
   "userName": "admin",
-  "role": "Admin"
+  "password": "Admin@123"
 }
 ```
 
@@ -82,6 +82,11 @@ Use the token in requests:
 ```
 Authorization: Bearer <token>
 ```
+
+### Dummy Users (for testing)
+Configured in `appsettings*.json` under `Users`:
+- `admin / Admin@123` (Role: Admin)
+- `user / User@123` (Role: User)
 
 ## Run the WPF client
 ```bash
@@ -98,6 +103,7 @@ You can change this in `WpfClient/ViewModels/MainViewModel.cs` if needed.
 - **Error dialog**: API errors pop a dialog (in addition to status bar).
 - **Paging UI**: next/prev buttons, total count, and page size selector.
 - **Grid sorting**: click column headers to sort server-side.
+- **Login panel**: username + password to request/store JWT automatically.
 
 ## Tests
 ```bash

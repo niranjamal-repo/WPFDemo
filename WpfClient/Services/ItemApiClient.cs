@@ -1,4 +1,5 @@
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Shared;
 using WpfClient.Models;
@@ -58,6 +59,24 @@ public class ItemApiClient
     {
         var response = await _httpClient.DeleteAsync($"api/v1/items/{id}");
         response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<TokenResponse> RequestTokenAsync(TokenRequest request)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/v1/auth/token", request);
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<TokenResponse>())!;
+    }
+
+    public void SetAccessToken(string? token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = null;
+            return;
+        }
+
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
     private static int? TryGetHeaderInt(HttpResponseMessage response, string headerName)

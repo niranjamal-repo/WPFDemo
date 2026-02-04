@@ -29,6 +29,21 @@ public class AuthController : ControllerBase
             return BadRequest("UserName is required.");
         }
 
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            return BadRequest("Password is required.");
+        }
+
+        var users = _configuration.GetSection("Users").Get<List<AppUser>>() ?? new List<AppUser>();
+        var user = users.FirstOrDefault(u =>
+            string.Equals(u.UserName, request.UserName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(u.Password, request.Password, StringComparison.Ordinal));
+
+        if (user is null)
+        {
+            return Unauthorized("Invalid username or password.");
+        }
+
         var jwtSection = _configuration.GetSection("Jwt");
         var issuer = jwtSection.GetValue<string>("Issuer");
         var audience = jwtSection.GetValue<string>("Audience");
@@ -40,9 +55,9 @@ public class AuthController : ControllerBase
 
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, request.UserName),
-            new(ClaimTypes.Name, request.UserName),
-            new(ClaimTypes.Role, request.Role)
+            new(JwtRegisteredClaimNames.Sub, user.UserName),
+            new(ClaimTypes.Name, user.UserName),
+            new(ClaimTypes.Role, user.Role)
         };
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));

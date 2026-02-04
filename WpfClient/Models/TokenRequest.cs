@@ -1,4 +1,4 @@
-namespace WebApi.Models;
+namespace WpfClient.Models;
 
 public class TokenRequest
 {

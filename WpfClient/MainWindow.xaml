@@ -14,13 +14,30 @@
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+            <TextBlock Text="User:" VerticalAlignment="Center"/>
+            <TextBox Width="160" Margin="6,0,12,0"
+                     Text="{Binding LoginUserName, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+            <TextBlock Text="Password:" VerticalAlignment="Center"/>
+            <PasswordBox Width="160" Margin="6,0,12,0"
+                         PasswordChanged="LoginPasswordBox_PasswordChanged"/>
+            <Button Content="Login" Width="90" Margin="0,0,8,0"
+                    Command="{Binding LoginCommand}"
+                    IsEnabled="{Binding IsAuthenticated, Converter={StaticResource InverseBooleanConverter}}"/>
+            <Button Content="Logout" Width="90" Margin="0,0,12,0"
+                    Command="{Binding LogoutCommand}"
+                    IsEnabled="{Binding IsAuthenticated}"/>
+            <TextBlock Text="{Binding AuthStatus}" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
             <TextBlock Text="Search:" VerticalAlignment="Center"/>
             <TextBox Width="200" Margin="6,0,12,0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
             <Button Content="Search" Width="90" Margin="0,0,8,0" Command="{Binding SearchCommand}"/>
@@ -40,7 +57,7 @@
                          Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}"/>
         </StackPanel>
 
-        <DataGrid Grid.Row="1"
+        <DataGrid Grid.Row="2"
                   x:Name="ItemsGrid"
                   ItemsSource="{Binding Items}"
                   SelectedItem="{Binding SelectedItem}"
@@ -58,7 +75,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8" VerticalAlignment="Center">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,8" VerticalAlignment="Center">
             <Button Content="Prev" Width="70" Margin="0,0,8,0" Command="{Binding PreviousPageCommand}"/>
             <Button Content="Next" Width="70" Margin="0,0,12,0" Command="{Binding NextPageCommand}"/>
             <TextBlock Text="Page" VerticalAlignment="Center"/>
@@ -76,7 +93,7 @@
             </ComboBox>
         </StackPanel>
 
-        <Grid Grid.Row="3" Margin="0,0,0,8">
+        <Grid Grid.Row="4" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
@@ -107,7 +124,7 @@
             </StackPanel>
         </Grid>
 
-        <Border Grid.Row="4" Background="#EEE" Padding="8">
+        <Border Grid.Row="5" Background="#EEE" Padding="8">
             <TextBlock Text="{Binding StatusMessage}"/>
         </Border>
     </Grid>
