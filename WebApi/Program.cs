@@ -16,7 +16,7 @@ using WebApi.Repositories;
 var builder = WebApplication.CreateBuilder(args);
 
 var appConfigConnection = builder.Configuration["AzureAppConfiguration:ConnectionString"];
-if (!string.IsNullOrWhiteSpace(appConfigConnection))
+if (IsConfiguredValue(appConfigConnection))
 {
     builder.Configuration.AddAzureAppConfiguration(options =>
         options.Connect(appConfigConnection)
@@ -25,7 +25,7 @@ if (!string.IsNullOrWhiteSpace(appConfigConnection))
 }
 
 var keyVaultUri = builder.Configuration["Azure:KeyVaultUri"];
-if (!string.IsNullOrWhiteSpace(keyVaultUri))
+if (IsConfiguredValue(keyVaultUri))
 {
     builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUri), new DefaultAzureCredential());
 }
@@ -146,7 +146,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-if (!string.IsNullOrWhiteSpace(appConfigConnection))
+if (IsConfiguredValue(appConfigConnection))
 {
     app.UseAzureAppConfiguration();
 }
@@ -162,4 +162,15 @@ app.Run();
 
 public partial class Program
 {
+}
+
+static bool IsConfiguredValue(string? value)
+{
+    if (string.IsNullOrWhiteSpace(value))
+    {
+        return false;
+    }
+
+    // Treat placeholder values (e.g., "<set-in-app-service>") as not configured.
+    return !value.Contains('<') && !value.Contains('>');
 }
